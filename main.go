@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -96,8 +98,24 @@ func streamAndUpdateMachines(registry *MachineRegistry, fullApiKey string, maasU
 }
 
 func main() {
+
+	// Define a command-line flag for the API key
+	fullApiKey := flag.String("apikey", "", "API key for MAAS (overrides MAAS_API_KEY env var if set)")
+	flag.Parse()
+
+	// First, try to get the API key from the environment variable
+	if *fullApiKey == "" {
+		*fullApiKey = os.Getenv("MAAS_API_KEY")
+	}
+
+	// Check if the API key is still empty
+	if *fullApiKey == "" {
+		fmt.Println("Error: API key is not provided. Set MAAS_API_KEY environment variable or use the -apikey flag.")
+		os.Exit(1) // Exit with an error code
+	}
+
 	// Full API key as a single string
-	fullApiKey := "dwXUe7WPvDeJCdj9wZ:YkpNHyMBtrWYgc54M6:9PJFbhnzuwYSGT2x5D6fEV6qsgLSpRye"
+	//fullApiKey := "dwXUe7WPvDeJCdj9wZ:YkpNHyMBtrWYgc54M6:9PJFbhnzuwYSGT2x5D6fEV6qsgLSpRye"
 	maasURL := "http://192.168.200.3:5240/MAAS/api/2.0/machines/"
 	timer := 15
 
@@ -110,7 +128,7 @@ func main() {
 
 	// initial run populates machine registry
 	fmt.Println("Initializing machine registry ...\n")
-	_, updatedMachines := streamAndUpdateMachines(&registry, fullApiKey, maasURL)
+	_, updatedMachines := streamAndUpdateMachines(&registry, *fullApiKey, maasURL)
 
 	for _, machine := range updatedMachines {
 		fmt.Printf("%s\n", machine.SystemID)
