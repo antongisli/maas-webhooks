@@ -114,8 +114,6 @@ func main() {
 		os.Exit(1) // Exit with an error code
 	}
 
-	// Full API key as a single string
-	//fullApiKey := "dwXUe7WPvDeJCdj9wZ:YkpNHyMBtrWYgc54M6:9PJFbhnzuwYSGT2x5D6fEV6qsgLSpRye"
 	maasURL := "http://192.168.200.3:5240/MAAS/api/2.0/machines/"
 	timer := 15
 
