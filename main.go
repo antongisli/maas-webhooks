@@ -25,6 +25,7 @@ type MachineRegistry struct {
 	mutex    sync.RWMutex
 }
 
+// this function allows updating the machine registry
 func (r *MachineRegistry) UpdateMachine(machine Machine) bool {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -38,6 +39,7 @@ func (r *MachineRegistry) UpdateMachine(machine Machine) bool {
 	}
 }
 
+// get latest list from MAAS, compare to local registry and update it, and return a list of all updated machine IDs
 func streamAndUpdateMachines(registry *MachineRegistry, fullApiKey string, maasURL string) (error, []Machine) {
 
 	var updatedMachines []Machine
@@ -137,7 +139,7 @@ func main() {
 	for {
 		time.Sleep(time.Duration(timer) * time.Second)
 		fmt.Println("Starting changed state check.\n")
-		_, updatedMachines := streamAndUpdateMachines(&registry, fullApiKey, maasURL)
+		_, updatedMachines := streamAndUpdateMachines(&registry, *fullApiKey, maasURL)
 		fmt.Println("Machines with changed state:\n")
 		for _, machine := range updatedMachines {
 			fmt.Printf("%s\n", machine.SystemID)
