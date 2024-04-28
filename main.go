@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"maaswebhooks/maasmock"
+
 	"github.com/google/uuid"
 )
 
@@ -101,6 +103,16 @@ func streamAndUpdateMachines(registry *MachineRegistry, fullApiKey string, maasU
 
 func main() {
 
+	maasURL := "http://192.168.200.3:5240/MAAS/api/2.0/machines/"
+	timer := 15
+
+	testing := os.Getenv("TESTING")
+
+	if testing == "true" {
+		go maasmock.StartMockServer()
+		maasURL = "http://localhost:5240/MAAS/api/2.0/machines/"
+	}
+
 	// Define a command-line flag for the API key
 	fullApiKey := flag.String("apikey", "", "API key for MAAS (overrides MAAS_API_KEY env var if set)")
 	flag.Parse()
@@ -115,9 +127,6 @@ func main() {
 		fmt.Println("Error: API key is not provided. Set MAAS_API_KEY environment variable or use the -apikey flag.")
 		os.Exit(1) // Exit with an error code
 	}
-
-	maasURL := "http://192.168.200.3:5240/MAAS/api/2.0/machines/"
-	timer := 15
 
 	var registry = MachineRegistry{
 		Machines: make(map[string]Machine),
