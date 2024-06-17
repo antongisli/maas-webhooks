@@ -22,6 +22,7 @@ type Machine struct {
 }
 
 // a slice of Machines with ability to lock
+// TODO - move the mutex to the machine itself, and move the lock management to the
 type MachineRegistry struct {
 	Machines map[string]Machine
 	mutex    sync.RWMutex
@@ -31,14 +32,13 @@ type MachineRegistry struct {
 func (r *MachineRegistry) UpdateMachine(machine Machine) bool {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	// Check if the machine exists and if the status has changed
+	// Check if the machine doesn't OR if the status has changed (either we are adding new machine or updating existing)
 	if existingMachine, ok := r.Machines[machine.SystemID]; !ok || existingMachine.StatusName != machine.StatusName {
 		r.Machines[machine.SystemID] = machine
-		fmt.Printf("Updated machine %s to status %s\n", machine.SystemID, machine.StatusName)
+		fmt.Printf("Updated/added machine %s with status %s\n", machine.SystemID, machine.StatusName)
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // get latest list from MAAS, compare to local registry and update it, and return a list of all updated machine IDs
@@ -113,13 +113,12 @@ func main() {
 		maasURL = "http://localhost:5240/MAAS/api/2.0/machines/"
 	}
 
-	// Define a command-line flag for the API key
+	// prefer API keys from command line, but fallback to environment variable
 	fullApiKey := flag.String("apikey", "", "API key for MAAS (overrides MAAS_API_KEY env var if set)")
 	flag.Parse()
-
-	// First, try to get the API key from the environment variable
-	if *fullApiKey == "" {
-		*fullApiKey = os.Getenv("MAAS_API_KEY")
+	if fullApiKey == nil {
+		fullApiKey2 := os.Getenv("MAAS_API_KEY")
+		fullApiKey = &fullApiKey2
 	}
 
 	// Check if the API key is still empty
@@ -128,6 +127,7 @@ func main() {
 		os.Exit(1) // Exit with an error code
 	}
 
+	// TODO there is a thing called a syncmap in Go
 	var registry = MachineRegistry{
 		Machines: make(map[string]Machine),
 		mutex:    sync.RWMutex{},

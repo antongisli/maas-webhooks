@@ -1,0 +1,10 @@
+TODO:
+
+moving mutexes to machines
+break up main into packages
+add redis support optional / testcontainers
+add unit testing
+add confirable hydration
+add deployment & packaging / Docker
+add integration testing
+- we need mock services for MAAS and for webhook recipients
